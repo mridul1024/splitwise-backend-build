@@ -1,6 +1,4 @@
-import fastify, { FastifyBaseLogger, FastifyHttpOptions, FastifyListenOptions, FastifyServerOptions } from "fastify";
-import { Server } from "http";
-import { Http2SecureServer } from "http2";
+import { FastifyListenOptions } from "fastify";
 import dotEnv from 'dotenv';
 
 dotEnv.config();
@@ -16,4 +14,5 @@ export const serverConfiguration = {
 
 export const fastifyListenerConfiguration: FastifyListenOptions = {
     port: Number(process.env['SERVER_PORT']),
+    host: process.env['SERVER_HOST']
 }
