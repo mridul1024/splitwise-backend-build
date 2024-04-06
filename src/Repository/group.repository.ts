@@ -1,3 +1,4 @@
+import { sql } from "kysely";
 import { db } from "../Clients/Kysely";
 import { GroupsTable } from "../Clients/Kysely/types";
 
@@ -19,4 +20,13 @@ export const addGroupToDb = async (payload: GroupsTable) => {
  */
 export const deleteGroupFromDb = async (groupId: number) => {
     return await db.deleteFrom('groups').where('id','=',groupId).returningAll().executeTakeFirstOrThrow();
+}
+
+export const getAllGroupsByUserIdFromDb = async (userId: number) => {
+    return await db.selectFrom('groups')
+    .selectAll()
+    .where(({eb}) => eb.or([
+        eb('admin_user_id','=',userId),
+        (sql<any>`${userId} = ANY(members)`)
+    ])).execute();
 }

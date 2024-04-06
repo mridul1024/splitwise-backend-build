@@ -49,3 +49,15 @@ export async function getAmountDueFromDb(payload: UsersTable){
     ]).innerJoin('expense','split.expense_id','expense.id').where('split.is_settled','=',false).where('expense.paid_by','=',payload.id!).executeTakeFirstOrThrow();
     return totalAmountDue;
 }
+
+
+/**
+ * @method getAllUsersFromDb
+ * @description Repository function to fetch all available users
+ * @param payload {UsersTable}
+ * @returns a number (due amount)
+ */
+export async function getAllUsersFromDb() {
+    const allUsers = await db.selectFrom('users').select(['email', 'name', 'id', 'phone_number']).execute();
+    return allUsers;
+}

@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginCallback, FastifyPluginOptions, FastifyReply, FastifyRequest } from "fastify";
 import { UsersTable } from "../Clients/Kysely/types";
-import { addNewUserToDb, compareHashedPassword, generateHash, getAmountDueService, getAmountOwedService, getUserService, signJWTPayload } from "../Services/user.service";
+import { addNewUserToDb, compareHashedPassword, generateHash, getAllUsersService, getAmountDueService, getAmountOwedService, getUserService, signJWTPayload } from "../Services/user.service";
 import { authCheck } from "../middleware/auth";
 
 const BASE_ROUTE = '/user/';
@@ -10,6 +10,13 @@ class UserRoutes {
 
   constructor(fastify: FastifyInstance) {
     this.fastify = fastify;
+  }
+
+  async baseRoute(request: FastifyRequest, reply: FastifyReply){
+    reply.send({
+      status: 200,
+      response: 'Splitwise Backend - Base Endpoint'
+    })
   }
 
   /**
@@ -97,6 +104,20 @@ class UserRoutes {
   }
 
     /**
+   * @method getAllUsers
+   * @description Function to fetch listing of all users
+   * @param request FastifyRequest
+   * @param reply FastifyReply
+   */
+  async getAllUsers(request: FastifyRequest, reply: FastifyReply){
+    const allUsers = await getAllUsersService();
+    reply.send({
+      status: 200,
+      users: allUsers
+    })
+  }
+
+    /**
    * @method createPlugin
    * @desription Factory method for generating the plugin
    * @param _ FastifyPluginOptions (optional)
@@ -104,6 +125,7 @@ class UserRoutes {
   static createPlugin(options?: FastifyPluginOptions): FastifyPluginCallback<FastifyPluginOptions> {
     return async (fastify: FastifyInstance, pluginOptions: FastifyPluginOptions) => {
       const userRoutes = new UserRoutes(fastify);
+      fastify.get('/',userRoutes.baseRoute.bind(userRoutes))
       fastify.post(BASE_ROUTE + 'signup',{
         schema: {
           description: 'This route handles the user sign up procedure.',
@@ -296,6 +318,34 @@ class UserRoutes {
         },
         onRequest: authCheck
       }, userRoutes.getUserDetails.bind(userRoutes));
+      fastify.get(BASE_ROUTE + 'list', {
+        schema: {
+          description: 'This route fetches and list all of the users.',
+          tags: ['User Operation Handlers'],
+          summary: 'List users',
+          response: {
+            200: {
+              type: 'object',
+              properties: {
+                status: {type: 'number'},
+                users: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      email: {type: 'string'},
+                      id: {type: 'number'},
+                      name: {type: 'string'},
+                      phone_number: {type: 'string'}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        onRequest: authCheck
+      }, userRoutes.getAllUsers.bind(userRoutes))
     };
   }
 }

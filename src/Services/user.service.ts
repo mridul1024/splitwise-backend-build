@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify"
-import { getAmountDueFromDb, getAmountOwedFromDb, getUserByEmail, insertUser } from "../Repository/user.repository"
+import { getAllUsersFromDb, getAmountDueFromDb, getAmountOwedFromDb, getUserByEmail, insertUser } from "../Repository/user.repository"
 import { UsersTable } from "../Clients/Kysely/types"
 import { EXPIRY_TIME } from "./types"
 
@@ -32,6 +32,11 @@ export const addNewUserToDb = async (payload: UsersTable) => {
         response: 'User successfully added!'
     };
 } 
+
+export const getAllUsersService = async () => {
+    const allUsers = await getAllUsersFromDb();
+    return allUsers
+}
 
 
 export const generateHash = async (fastify: FastifyInstance, payload: string) => {

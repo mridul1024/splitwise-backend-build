@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginCallback, FastifyPluginOptions, FastifyReply, FastifyRequest } from "fastify";
 import { GroupsTable } from "../Clients/Kysely/types";
-import { createGroupService, deleteGroupService } from "../Services/group.service";
+import { createGroupService, deleteGroupService, getAllGroupsByUserIdService } from "../Services/group.service";
 import { authCheck } from "../middleware/auth";
 
 const BASE_ROUTE = '/groups/';
@@ -49,6 +49,20 @@ class GroupRoutes {
     })
   }
 
+  /**
+   * @method getAllGroupsByUserId
+   * @description Lists all the groups that the specified user is part of
+   * @param request FastifyRequest
+   * @param reply FastifyReply
+   */
+  async getAllGroupsByUserId(request: FastifyRequest, reply: FastifyReply){
+    const {id} = request.query as {id: number};
+    const allGroups = await getAllGroupsByUserIdService(id);
+    return {
+      status: 200, 
+      groups: allGroups
+    }
+  }
   
   /**
    * @method createPlugin
@@ -168,6 +182,38 @@ class GroupRoutes {
         },
         onRequest: authCheck
       }, groupRoutes.deleteGroup.bind(groupRoutes));
+      fastify.get(BASE_ROUTE + 'list' + ':id',{
+        schema: {
+          description: 'This route lists all of the groups that the specified user belongs to.',
+          tags: ['Group Operation Handlers'],
+          summary: 'List Group By ID',
+          response: {
+            200: {
+              type: 'object',
+              description: "Successful Response",
+              properties: {
+                status:{type: 'number'},
+                allGroups: {type: 'array',
+                  items: {type: 'object',
+                  properties: {
+                    id: {type: 'number'},
+                    group_name: {type: 'string'},
+                    creation_date: {type: 'string'},
+                    admin_user_id: {type: 'number'},
+                    members: {type: 'array',
+                      items: {
+                        type: 'number'
+                      }
+                    }
+                  }
+                }
+                }
+              }
+            },
+          }
+        },
+        onRequest: authCheck
+      } , groupRoutes.getAllGroupsByUserId.bind(groupRoutes))
     };
   }
 }
